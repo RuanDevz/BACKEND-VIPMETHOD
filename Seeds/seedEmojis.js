@@ -1,5 +1,4 @@
-// seedEmojis.js
-const { Emojis } = require('../models');
+const { Emojis, Free } = require('../models');
 const sequelize = require('../models').sequelize;
 
 const emojiList = [
@@ -12,12 +11,32 @@ const emojiList = [
 ];
 
 async function seedEmojis() {
-  await sequelize.sync(); 
-  for (const name of emojiList) {
-    await Emojis.findOrCreate({ where: { name } });
+  try {
+    await sequelize.sync();
+
+    // Buscar todos os posts para popular emojis
+    const posts = await Free.findAll();
+
+    if (posts.length === 0) {
+      console.log("Nenhum post encontrado. Crie pelo menos um conteúdo para popular os emojis.");
+      return process.exit();
+    }
+
+    for (const post of posts) {
+      for (const name of emojiList) {
+        await Emojis.findOrCreate({
+          where: { name, linkId: post.id },
+          defaults: { count: 0 } // Começa com 0 reações
+        });
+      }
+    }
+
+    console.log("Emojis populados com sucesso para cada post!");
+    process.exit();
+  } catch (err) {
+    console.error("Erro ao popular emojis:", err);
+    process.exit(1);
   }
-  console.log("Emojis populados com sucesso!");
-  process.exit();
 }
 
 seedEmojis();
