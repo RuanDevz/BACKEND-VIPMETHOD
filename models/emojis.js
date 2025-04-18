@@ -1,21 +1,22 @@
 module.exports = (sequelize, DataTypes) => {
-    const Emojis = sequelize.define("Emojis", {
-      name: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        unique: true, 
-      },
-      count: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        defaultValue: 0, 
-      },
-      linkId: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-      },
-    });
-  
-    return Emojis;
-  };
-  
+  const UserEmojis = sequelize.define('UserEmojis', {
+    userId: {
+      type: DataTypes.INTEGER,
+      allowNull: false
+    },
+    linkId: {
+      type: DataTypes.INTEGER,
+      allowNull: false
+    },
+    emojiName: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
+    count: {  // Adicionando o campo count
+      type: DataTypes.INTEGER,
+      defaultValue: 0  // Inicializa o contador com 0
+    }
+  });
+
+  return UserEmojis;
+};

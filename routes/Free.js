@@ -2,17 +2,14 @@ const express = require('express');
 const router = express.Router();
 const { Free } = require('../models');
 
-// Criar (POST) - Adicionar um novo conteúdo gratuito ou múltiplos conteúdos
 router.post('/', async (req, res) => {
     try {
-        const freeContents = req.body; // Pode ser um único objeto ou um array de objetos
+        const freeContents = req.body; 
 
         let createdContents;
         if (Array.isArray(freeContents)) {
-            // Caso seja um array, use bulkCreate
             createdContents = await Free.bulkCreate(freeContents);
         } else {
-            // Caso seja um único objeto, use create
             createdContents = await Free.create(freeContents);
         }
 

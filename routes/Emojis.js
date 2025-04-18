@@ -1,42 +1,18 @@
 const express = require('express');
 const router = express.Router();
-const { Emojis } = require('../models');
+const jwt = require('jsonwebtoken')
+const {UserEmojis} = require('../models')
 
-// Reagir com emoji para um post específico
-router.post("/emoji/:name/react", async (req, res) => {
-  const { name } = req.params;
-  const { linkId } = req.body;
-
-  if (!linkId) {
-    return res.status(400).json({ error: "linkId é obrigatório" });
-  }
-
-  try {
-    const [emoji, created] = await Emojis.findOrCreate({
-      where: { name, linkId },
-      defaults: { count: 1 },
-    });
-
-    if (!created) {
-      emoji.count += 1;
-      await emoji.save();
-    }
-
-    res.json({ success: true, count: emoji.count });
-  } catch (err) {
-    res.status(500).json({ error: "Erro ao reagir com emoji" });
-  }
-});
 
 // Buscar um emoji específico para um post
-router.get("/emoji/:name/:linkId", async (req, res) => {
-  const { name, linkId } = req.params;
+router.get("/emoji/:emojiName/:linkId", async (req, res) => {
+  const { emojiName, linkId } = req.params;
 
   try {
-    const emoji = await Emojis.findOne({ where: { name, linkId } });
+    const emoji = await UserEmojis.findOne({ where: { emojiName, linkId } });
     if (!emoji) return res.status(404).json({ message: "Emoji não encontrado" });
 
-    res.json({ name: emoji.name, count: emoji.count });
+    res.json({ emojiName: emoji.emojiName, count: emoji.count });
   } catch (err) {
     res.status(500).json({ error: "Erro ao buscar emoji" });
   }
@@ -45,8 +21,8 @@ router.get("/emoji/:name/:linkId", async (req, res) => {
 // Buscar todos os emojis para todos os posts (usado no frontend atual)
 router.get("/emojis", async (req, res) => {
   try {
-    const emojis = await Emojis.findAll({
-      attributes: ['name', 'count', 'linkId'],
+    const emojis = await UserEmojis.findAll({
+      attributes: ['emojiName', 'count', 'linkId'],
       order: [['count', 'DESC']],
     });
 
@@ -57,24 +33,53 @@ router.get("/emojis", async (req, res) => {
 });
 
 // Resetar contador de emoji para um post específico
-router.post("/emoji/:name/reset", async (req, res) => {
-  const { name } = req.params;
+router.post("/emoji/:emojiName/react", async (req, res) => {
+  const { emojiName } = req.params;
   const { linkId } = req.body;
+  const token = req.headers.authorization?.split(" ")[1];
 
-  if (!linkId) {
-    return res.status(400).json({ error: "linkId é obrigatório" });
+  if (!linkId || !token) {
+    return res.status(400).json({ error: "linkId e token são obrigatórios" });
   }
 
   try {
-    const emoji = await Emojis.findOne({ where: { name, linkId } });
-    if (!emoji) return res.status(404).json({ message: "Emoji não encontrado" });
+    const decoded = jwt.verify(token, process.env.TOKEN_VERIFY_ACCESS);
+    const userId = decoded.id;
 
-    emoji.count = 0;
-    await emoji.save();
+    const existing = await UserEmojis.findOne({ where: { userId, linkId } });
 
-    res.json({ success: true, count: emoji.count });
+    if (existing) {
+      if (existing.emojiName === emojiName) {
+        return res.status(403).json({ error: "Você já reagiu com esse emoji." });
+      }
+
+      // Subtrai do emoji antigo
+      await UserEmojis.decrement('count', {
+        by: 1,
+        where: { emojiName: existing.emojiName, linkId }
+      });
+
+      await UserEmojis.increment('count', {
+        by: 1,
+        where: { emojiName, linkId }
+      });
+
+      existing.emojiName = emojiName;
+      await existing.save();
+    } else {
+      // Primeiro emoji desse user para esse conteúdo
+      await UserEmojis.create({ userId, linkId, emojiName: emojiName });
+
+      await UserEmojis.increment('count', {
+        by: 1,
+        where: { emojiName, linkId }
+      });
+    }
+
+    return res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: "Erro ao resetar o emoji" });
+    console.error("Erro na reação:", err);
+    return res.status(500).json({ error: "Erro ao reagir" });
   }
 });
 
