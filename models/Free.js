@@ -10,11 +10,11 @@ module.exports = (sequelize, DataTypes) => {
     },
     linkP:{
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true,
     },
     linkG:{
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true,
     },
     linkMV1:{
       type: DataTypes.STRING,
