@@ -9,8 +9,32 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING,
         allowNull: false,
       },
+      linkP:{
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      linkG:{
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      linkMV1:{
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      linkMV2:{
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      linkMV3:{
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      slug:{
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
       category: {
-        type: DataTypes.STRING, 
+        type: DataTypes.STRING,
         allowNull: false,
       },
       postDate: {

@@ -12,9 +12,9 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING,
       allowNull: false
     },
-    count: {  // Adicionando o campo count
+    count: {  
       type: DataTypes.INTEGER,
-      defaultValue: 0  // Inicializa o contador com 0
+      defaultValue: 0  
     }
   });
 

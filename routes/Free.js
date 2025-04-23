@@ -19,6 +19,21 @@ router.post('/', async (req, res) => {
     }
 });
 
+router.get('/:slug', async (req, res) => {
+    try {
+        const { slug } = req.params;
+        const freeContent = await Free.findOne({ where: { slug } });
+
+        if (!freeContent) {
+            return res.status(404).json({ error: 'Conteúdo gratuito não encontrado com esse slug' });
+        }
+
+        res.status(200).json(freeContent);
+    } catch (error) {
+        res.status(500).json({ error: 'Erro ao buscar o conteúdo gratuito por slug: ' + error.message });
+    }
+});
+
 router.get('/', async (req, res) => {
     try {
         const freeContents = await Free.findAll();
