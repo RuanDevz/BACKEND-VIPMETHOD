@@ -27,7 +27,6 @@ const FilteroptionsRouter = require('./routes/filter_options')
 const authRoutes = require('./routes/authRoutes')
 const stripeWebhookRouter =  require('./routes/stripewebhook')
 const renewVipRouter = require('./routes/Renewvip');
-const EmojisRouter = require('./routes/Emojis');
 
 
 app.use('/auth', userRouter);
@@ -44,7 +43,6 @@ app.use('/recommendations', recommendationsRouter);
 app.use('/filteroptions', FilteroptionsRouter)
 app.use('/webhook', stripeWebhookRouter);
 app.use('/auth', renewVipRouter);
-app.use('/', EmojisRouter);
 
 
 const pool = new Pool({

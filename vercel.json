@@ -11,11 +11,5 @@
       "src": "/(.*)",
       "dest": "/index.js"
     }
-  ],
-  "crons": [
-    {
-      "path": "/routes/stripewebhook.js",
-      "schedule": "0 0 * * *"
-    }
   ]
 }
