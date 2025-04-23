@@ -42,7 +42,7 @@ app.use('/filteroptions', FilteroptionsRouter)
 app.use('/webhook', stripeWebhookRouter);
 app.use('/auth', renewVipRouter);
 
-
+// removi
 const pool = new Pool({
   connectionString: process.env.POSTGRES_URL, 
 });
