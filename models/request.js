@@ -11,15 +11,15 @@ module.exports = (sequelize, DataTypes) => {
       status: {
         type: DataTypes.STRING,
         allowNull: false,
-        defaultValue: 'pending', // Status inicial pode ser 'pendente'
+        defaultValue: 'pending',
       },
       dateRequested: {
         type: DataTypes.DATE,
         allowNull: false,
-        defaultValue: DataTypes.NOW, // Define o horário atual quando o pedido é criado
+        defaultValue: DataTypes.NOW, 
       },
     }, {
-      timestamps: false, // Ou 'true', caso queira timestamps automáticos
+      timestamps: false, 
       tableName: 'requests',
     });
   

@@ -56,11 +56,10 @@ router.get('/:id', async (req, res) => {
     }
 });
 
-// Atualizar (PUT) - Atualizar conteúdo VIP
 router.put('/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, link, createdAt } = req.body; // Incluindo 'createdAt' no corpo da requisição
+        const { name, link, createdAt } = req.body;
 
         const vipContentToUpdate = await Vip.findByPk(id);
         if (!vipContentToUpdate) {
@@ -69,7 +68,7 @@ router.put('/:id', async (req, res) => {
 
         vipContentToUpdate.name = name;
         vipContentToUpdate.link = link;
-        vipContentToUpdate.createdAt = createdAt || vipContentToUpdate.createdAt; // Atualiza a data se passada, senão mantém a existente
+        vipContentToUpdate.createdAt = createdAt || vipContentToUpdate.createdAt; 
 
         await vipContentToUpdate.save();
 
@@ -79,7 +78,6 @@ router.put('/:id', async (req, res) => {
     }
 });
 
-// Deletar (DELETE) - Deletar conteúdo VIP
 router.delete('/:id', async (req, res) => {
     try {
         const { id } = req.params;

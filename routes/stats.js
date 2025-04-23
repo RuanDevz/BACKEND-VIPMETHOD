@@ -22,10 +22,10 @@ router.get("/", async (req, res) => {
       },
     });
 
-    // Porcentagem de VIPs
+
     const vipPercentage = totalUsers > 0 ? ((totalVIPs / totalUsers) * 100).toFixed(2) : 0;
 
-    // Enviar os dados de estatísticas
+
     res.json({
       totalUsers,
       totalVIPs,

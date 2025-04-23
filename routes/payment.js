@@ -13,7 +13,6 @@ router.post('/vip-payment', async (req, res) => {
     }
 
     try {
-        // Verifica se o e-mail existe no banco de dados
         const user = await User.findOne({ where: { email } });
 
         if (!user) {
@@ -27,7 +26,7 @@ router.post('/vip-payment', async (req, res) => {
 
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ['card'],
-            customer_email: email, // Garante que o e-mail usado na Stripe seja o do usuário logado
+            customer_email: email, 
             line_items: [
                 {
                     price: prices[planType],

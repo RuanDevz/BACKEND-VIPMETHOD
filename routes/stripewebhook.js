@@ -17,7 +17,6 @@ router.post('/stripe-webhook', express.raw({ type: 'application/json' }), async 
         return res.status(400).send(`Webhook Error: ${err.message}`);
     }
 
-    // Lógica do webhook aqui
     switch (event.type) {
         case 'invoice.payment_succeeded':
             const invoice = event.data.object;
@@ -52,7 +51,7 @@ router.post('/stripe-webhook', express.raw({ type: 'application/json' }), async 
             if (userToCancel) {
                 await userToCancel.update({
                     isVip: false,
-                    vipExpirationDate: null, // Remove a data de expiração
+                    vipExpirationDate: null, 
                 });
             }
             break;

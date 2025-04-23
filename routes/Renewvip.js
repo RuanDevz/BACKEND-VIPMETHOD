@@ -13,11 +13,9 @@ router.put('/renew-vip/:email', async (req, res) => {
       return res.status(404).json({ message: 'Usuário não encontrado.' });
     }
 
-    // Calcule a nova data de expiração (30 dias a partir de hoje ou da data atual)
     const currentDate = user.vipExpirationDate ? new Date(user.vipExpirationDate) : new Date();
     const newExpirationDate = new Date(currentDate.setDate(currentDate.getDate() + 30));
 
-    // Atualize o campo vipExpirationDate e defina isDisabled como false e isVip como true
     await User.update(
       { vipExpirationDate: newExpirationDate, isDisabled: false, isVip: true },
       { where: { email } }
@@ -38,17 +36,14 @@ router.put('/renew-vip-year/:email', async (req, res) => {
   try {
     const { email } = req.params;
 
-    // Encontre o usuário pelo email
     const user = await User.findOne({ where: { email } });
     if (!user) {
       return res.status(404).json({ message: 'Usuário não encontrado.' });
     }
 
-    // Calcule a nova data de expiração (1 ano a partir de hoje ou da data atual)
     const currentDate = user.vipExpirationDate ? new Date(user.vipExpirationDate) : new Date();
     const newExpirationDate = new Date(currentDate.setFullYear(currentDate.getFullYear() + 1));
 
-    // Atualize o campo vipExpirationDate e defina isDisabled como false e isVip como true
     await User.update(
       { vipExpirationDate: newExpirationDate, isDisabled: false, isVip: true },
       { where: { email } }
