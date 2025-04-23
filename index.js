@@ -3,14 +3,12 @@ const cors = require('cors');
 const db = require('./models');
 require('dotenv').config();
 const { Pool } = require('pg');
-const startCronJob = require('./Services/cronService');
 
 
 const app = express();
 
 app.use(express.json());
 app.use(cors())
-startCronJob();
 
 
 const userRouter = require('./routes/user');
