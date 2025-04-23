@@ -34,7 +34,7 @@ module.exports = (sequelize, DataTypes) => {
     },
     category: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true,
     },
     postDate: {
       type: DataTypes.DATE,
