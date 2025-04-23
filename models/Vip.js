@@ -42,6 +42,11 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         defaultValue: DataTypes.NOW,
       },
+      createdAt: {
+        type: DataTypes.DATE, // ou DataTypes.DATEONLY se for apenas a data
+        allowNull: false,
+        defaultValue: DataTypes.NOW, // se necessário, define o valor padrão
+      }
     });
   
     return Vip;
