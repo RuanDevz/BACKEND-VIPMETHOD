@@ -5,7 +5,7 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING,
         allowNull: false,
         validate: {
-          isIn: [['actress', 'feature']], // Definir os tipos permitidos
+          isIn: [['actress', 'feature']], 
         },
       },
       value: {

@@ -58,7 +58,6 @@ pool.connect((err, client, done) => {
 
 db.sequelize.sync({ alter: true }); 
 
-
 db.sequelize.authenticate()
   .then(() => {
     console.log('Conexão com o banco de dados estabelecida com sucesso.');
