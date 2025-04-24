@@ -2,18 +2,35 @@ const express = require('express');
 const router = express.Router();
 const { Free } = require('../models');
 
+function generateSlug(postDate, name) {
+    const date = new Date(postDate);
+    const formattedDate = date.toISOString().split('T')[0]; // '2025-10-10'
+    const formattedName = name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-') // Substitui caracteres inválidos por hífen
+      .replace(/(^-|-$)/g, '');    // Remove hífen do começo/fim
+    return `${formattedDate}-${formattedName}`;
+  }
+
 router.post('/', async (req, res) => {
     try {
-        const freeContents = req.body; 
+        let freeContents = req.body;
 
-        let createdContents;
+        // Se for array, aplica o slug para cada item
         if (Array.isArray(freeContents)) {
-            createdContents = await Free.bulkCreate(freeContents);
-        } else {
-            createdContents = await Free.create(freeContents);
-        }
-
-        res.status(201).json(createdContents);
+            freeContents = freeContents.map(item => ({
+                ...item,
+                slug: generateSlug(item.postDate, item.name)
+            }));
+            const createdContents = await Free.bulkCreate(freeContents);
+            return res.status(201).json(createdContents);
+        } 
+        
+        // Se for um único objeto
+        freeContents.slug = generateSlug(freeContents.postDate, freeContents.name);
+        const createdContent = await Free.create(freeContents);
+        res.status(201).json(createdContent);
+        
     } catch (error) {
         res.status(500).json({ error: 'Erro ao criar os conteúdos gratuitos: ' + error.message });
     }
