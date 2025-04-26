@@ -1,13 +1,11 @@
 const express = require('express');
 const router = express.Router();
-const { User } = require('../models'); // Importe o modelo User
+const { User } = require('../models'); 
 
-// Rota para renovar o VIP por +30 dias
 router.put('/renew-vip/:email', async (req, res) => {
   try {
     const { email } = req.params;
 
-    // Encontre o usuário pelo email
     const user = await User.findOne({ where: { email } });
     if (!user) {
       return res.status(404).json({ message: 'Usuário não encontrado.' });
