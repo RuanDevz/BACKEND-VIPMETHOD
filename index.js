@@ -13,7 +13,7 @@ app.use((req, res, next) => {
   next();
 });
 
-const allowedOrigins = ['http://localhost:5173', 'https://sevenxleaks.com'];
+const allowedOrigins = ['http://localhost:5173', 'https://sevenxleaks.com', "https://sevenxleaks.vercel.app"];
 
 app.use(cors({
   origin: function (origin, callback) {
