@@ -6,11 +6,10 @@ const { Pool } = require('pg');
 
 const app = express();
 
-app.use(express.json()); // Para body JSON nas requisições padrão
+app.use(express.json()); 
 
-// Logar o Origin de todas as requisições CORS
 app.use((req, res, next) => {
-  console.log('CORS Origin:', req.headers.origin); // Log de origem
+  console.log('CORS Origin:', req.headers.origin); 
   next();
 });
 
@@ -28,10 +27,8 @@ app.use(cors({
   credentials: true
 }));
 
-// Responder a requisições OPTIONS para todas as rotas (preflight request)
-app.options('*', cors()); // Isso garante que todas as requisições OPTIONS sejam tratadas corretamente
+app.options('*', cors()); 
 
-// Rota de webhook, precisa de express.raw para evitar parsing de JSON
 app.use('/webhook', express.raw({ type: '*/*' }));
 
 const userRouter = require('./routes/user');

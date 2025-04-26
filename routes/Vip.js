@@ -5,11 +5,12 @@ const { Vip } = require('../models');
 // Função para gerar o slug automaticamente
 function generateSlug(postDate, name) {
   const date = new Date(postDate);
-  const formattedDate = date.toISOString().split('T')[0]; // '2025-10-10'
+  date.setDate(date.getDate() - 1); 
+  const formattedDate = date.toISOString().split('T')[0]; 
   const formattedName = name
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-') // Substitui qualquer caractere que não for letra ou número por hífen
-    .replace(/(^-|-$)/g, '');    // Remove hífens do início/fim
+    .replace(/[^a-z0-9]+/g, '-') 
+    .replace(/(^-|-$)/g, '');   
   return `${formattedDate}-${formattedName}`;
 }
 

@@ -4,11 +4,12 @@ const { Free } = require('../models');
 
 function generateSlug(postDate, name) {
     const date = new Date(postDate);
-    const formattedDate = date.toISOString().split('T')[0]; // '2025-10-10'
+    date.setDate(date.getDate() - 1); 
+    const formattedDate = date.toISOString().split('T')[0]; 
     const formattedName = name
       .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-') // Substitui caracteres inválidos por hífen
-      .replace(/(^-|-$)/g, '');    // Remove hífen do começo/fim
+      .replace(/[^a-z0-9]+/g, '-') 
+      .replace(/(^-|-$)/g, '');   
     return `${formattedDate}-${formattedName}`;
   }
 
