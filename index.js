@@ -4,10 +4,16 @@ const db = require('./models');
 require('dotenv').config();
 const { Pool } = require('pg');
 
-
 const app = express();
 
-app.use(express.json());
+app.use(express.json()); // Para body JSON nas requisições padrão
+
+// Logar o Origin de todas as requisições CORS
+app.use((req, res, next) => {
+  console.log('CORS Origin:', req.headers.origin); // Log de origem
+  next();
+});
+
 const allowedOrigins = ['http://localhost:5173', 'https://sevenxleaks.com'];
 
 app.use(cors({
@@ -22,6 +28,11 @@ app.use(cors({
   credentials: true
 }));
 
+// Responder a requisições OPTIONS para todas as rotas (preflight request)
+app.options('*', cors()); // Isso garante que todas as requisições OPTIONS sejam tratadas corretamente
+
+// Rota de webhook, precisa de express.raw para evitar parsing de JSON
+app.use('/webhook', express.raw({ type: '*/*' }));
 
 const userRouter = require('./routes/user');
 const FreeRouter = require('./routes/Free');
@@ -33,11 +44,10 @@ const UpdateVipStatus = require('./routes/updatevipstatus');
 const StatsRouter = require('./routes/stats');  
 const RequestsRouter = require('./routes/requests');  
 const recommendationsRouter = require('./routes/recommendations');
-const FilteroptionsRouter = require('./routes/filter_options')
-const authRoutes = require('./routes/authRoutes')
-const stripeWebhookRouter =  require('./routes/stripewebhook')
+const FilteroptionsRouter = require('./routes/filter_options');
+const authRoutes = require('./routes/authRoutes');
+const stripeWebhookRouter = require('./routes/stripewebhook');
 const renewVipRouter = require('./routes/Renewvip');
-
 
 app.use('/auth', userRouter);
 app.use('/auth', authRoutes);
@@ -48,13 +58,13 @@ app.use('/forgot-password', Forgotpass);
 app.use('/reset-password', ResetPasswordRouter);
 app.use('/update-vip-status', UpdateVipStatus);
 app.use('/api/stats', StatsRouter);  
-app.use('/admin/requests', RequestsRouter)
+app.use('/admin/requests', RequestsRouter);
 app.use('/recommendations', recommendationsRouter);
-app.use('/filteroptions', FilteroptionsRouter)
+app.use('/filteroptions', FilteroptionsRouter);
 app.use('/webhook', stripeWebhookRouter);
 app.use('/auth', renewVipRouter);
 
-
+// Conexão com o banco de dados PostgreSQL
 const pool = new Pool({
   connectionString: process.env.POSTGRES_URL, 
 });
@@ -68,7 +78,8 @@ pool.connect((err, client, done) => {
   done();
 });
 
-db.sequelize.sync({ alter: true }); 
+// Sincronização do Sequelize
+db.sequelize.sync({ alter: true });
 
 db.sequelize.authenticate()
   .then(() => {
