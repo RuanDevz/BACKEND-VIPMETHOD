@@ -5,11 +5,10 @@ require('dotenv').config();
 const { Pool } = require('pg');
 
 const app = express();
+app.use(cors());
 
-app.use(cors())
 
 const webhookRouter = require('./routes/stripewebhook');
-
 app.use('/webhook', webhookRouter)
 
 
@@ -21,7 +20,6 @@ app.use((req, res, next) => {
   }
 });
 
-app.use('/webhook', express.raw({ type: '*/*' }));
 
 const userRouter = require('./routes/user');
 const FreeRouter = require('./routes/Free');
@@ -37,8 +35,13 @@ const FilteroptionsRouter = require('./routes/filter_options');
 const authRoutes = require('./routes/authRoutes');
 const stripeWebhookRouter = require('./routes/stripewebhook');
 const renewVipRouter = require('./routes/Renewvip');
+const cancelsubscriptionRouter = require('./routes/Cancelsubscription')
 
 app.use('/auth', userRouter);
+
+app.use('/cancel-subscription', cancelsubscriptionRouter);
+
+
 app.use('/auth', authRoutes);
 app.use('/freecontent', FreeRouter);
 app.use('/vipcontent', VipRouter);
