@@ -6,28 +6,20 @@ const { Pool } = require('pg');
 
 const app = express();
 
-app.use(express.json()); 
+app.use(cors())
+
+const webhookRouter = require('./routes/stripewebhook');
+
+app.use('/webhook', webhookRouter)
+
 
 app.use((req, res, next) => {
-  console.log('CORS Origin:', req.headers.origin); 
-  next();
+  if (req.originalUrl === '/webhook') {
+    next();
+  } else {
+    express.json()(req, res, next);
+  }
 });
-
-const allowedOrigins = ['http://localhost:5173', 'https://sevenxleaks.com', "https://sevenxleaks.vercel.app"];
-
-app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  methods: 'GET,POST,PUT,DELETE',
-  credentials: true
-}));
-
-app.options('*', cors()); 
 
 app.use('/webhook', express.raw({ type: '*/*' }));
 
