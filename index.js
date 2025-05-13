@@ -20,6 +20,9 @@ app.use((req, res, next) => {
   }
 });
 
+const reactionsRouter = require('./routes/Reactions');
+
+
 
 const userRouter = require('./routes/user');
 const FreeRouter = require('./routes/Free');
@@ -41,6 +44,7 @@ app.use('/auth', userRouter);
 
 app.use('/cancel-subscription', cancelsubscriptionRouter);
 
+app.use('/reactions', reactionsRouter);
 
 app.use('/auth', authRoutes);
 app.use('/freecontent', FreeRouter);
