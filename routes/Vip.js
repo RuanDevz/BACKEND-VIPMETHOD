@@ -38,7 +38,7 @@ router.post('/', async (req, res) => {
 });
 
 // Buscar por slug
-router.get('/slug/:slug', async (req, res) => {
+router.get('/:slug', async (req, res) => {
   try {
     const { slug } = req.params;
     const vipContent = await Vip.findOne({ where: { slug } });
