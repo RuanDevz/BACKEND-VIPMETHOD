@@ -38,7 +38,7 @@ router.post('/', async (req, res) => {
 });
 
 // Buscar por slug
-router.get('/:slug', async (req, res) => {
+router.get('/slug/:slug', async (req, res) => {
   try {
     const { slug } = req.params;
     const vipContent = await Vip.findOne({ where: { slug } });
@@ -53,11 +53,24 @@ router.get('/:slug', async (req, res) => {
   }
 });
 
-// Listar todos
+// Listar todos com paginação
 router.get('/', async (req, res) => {
   try {
-    const vipContents = await Vip.findAll();
-    res.status(200).json(vipContents);
+    const page = parseInt(req.query.page) || 1;
+    const limit = 900;
+    const offset = (page - 1) * limit;
+
+    const vipContents = await Vip.findAll({
+      limit,
+      offset,
+      order: [['postDate', 'DESC']],
+    });
+
+    res.status(200).json({
+      page,
+      perPage: limit,
+      data: vipContents,
+    });
   } catch (error) {
     res.status(500).json({ error: 'Erro ao buscar os conteúdos VIP: ' + error.message });
   }
@@ -93,7 +106,6 @@ router.put('/:id', async (req, res) => {
     vipContentToUpdate.createdAt = createdAt || vipContentToUpdate.createdAt;
     vipContentToUpdate.postDate = postDate || vipContentToUpdate.postDate;
 
-    // Atualiza slug se name ou postDate forem alterados
     if (name || postDate) {
       vipContentToUpdate.slug = generateSlug(
         postDate || vipContentToUpdate.postDate,

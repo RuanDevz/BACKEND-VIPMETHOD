@@ -17,7 +17,6 @@ router.post('/', async (req, res) => {
     try {
         let freeContents = req.body;
 
-        // Se for array, aplica o slug para cada item
         if (Array.isArray(freeContents)) {
             freeContents = freeContents.map(item => ({
                 ...item,
@@ -54,10 +53,25 @@ router.get('/:slug', async (req, res) => {
 
 router.get('/', async (req, res) => {
     try {
-        const freeContents = await Free.findAll();
-        res.status(200).json(freeContents);
+        // Pegando página e limite dos query params, com valores padrão
+        const page = parseInt(req.query.page) || 1; // página atual (default 1)
+        const limit = 900; // número fixo de conteúdos por página
+        const offset = (page - 1) * limit; // a partir de qual registro começar
+
+        // Buscar conteúdos com paginação, ordenando pela data mais recente
+        const freeContents = await Free.findAll({
+            limit,
+            offset,
+            order: [['postDate', 'DESC']], // mais recentes primeiro
+        });
+
+        res.status(200).json({
+            page,
+            perPage: limit,
+            data: freeContents,
+        });
     } catch (error) {
-        res.status(500).json({ error: 'Erro ao buscar os conteúdos gratuitos: ' + error });
+        res.status(500).json({ error: 'Erro ao buscar os conteúdos gratuitos: ' + error.message });
     }
 });
 
