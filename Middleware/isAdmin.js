@@ -1,4 +1,4 @@
-const { User } = require('.././models');
+const { User } = require('../models');
 
 const isAdmin = async (req, res, next) => {
     const userId = req.user.id;
@@ -15,7 +15,7 @@ const isAdmin = async (req, res, next) => {
         }
 
 
-        next(); // Se o usuário for administrador, permitir a execução da rota
+        next();
     } catch (error) {
         console.error(error);
         return res.status(500).json({ error: "Erro interno do servidor" });

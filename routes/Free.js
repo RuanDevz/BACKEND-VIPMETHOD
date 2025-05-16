@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const { Free } = require('../models');
+const verifyToken = require('../Middleware/verifyToken');
+const isAdmin = require('../Middleware/isAdmin');
 
 function generateSlug(postDate, name) {
     const date = new Date(postDate);
@@ -13,7 +15,7 @@ function generateSlug(postDate, name) {
     return `${formattedDate}-${formattedName}`;
   }
 
-router.post('/', async (req, res) => {
+router.post('/', verifyToken, isAdmin, async (req, res) => {
     try {
         let freeContents = req.body;
 
@@ -90,7 +92,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // Atualizar (PUT) - Atualizar conteúdo gratuito
-router.put('/:id', async (req, res) => {
+router.put('/:id', verifyToken, isAdmin, async (req, res) => {
     try {
         const { id } = req.params;
         const { name, link, createdAt } = req.body; // Incluindo 'createdAt' no corpo da requisição
@@ -113,7 +115,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // Deletar (DELETE) - Deletar conteúdo gratuito
-router.delete('/:id', async (req, res) => {
+router.delete('/:id',verifyToken, isAdmin, async (req, res) => {
     try {
         const { id } = req.params;
 

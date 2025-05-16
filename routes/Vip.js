@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const { Vip } = require('../models');
+const isAdmin = require('../Middleware/isAdmin');
+const verifyToken = require('../Middleware/verifyToken');
 
 // Função para gerar o slug automaticamente
 function generateSlug(postDate, name) {
@@ -15,7 +17,7 @@ function generateSlug(postDate, name) {
 }
 
 // Criar conteúdo VIP
-router.post('/', async (req, res) => {
+router.post('/', verifyToken,isAdmin, async (req, res) => {
   try {
     let vipContents = req.body;
 
@@ -91,7 +93,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // Atualizar
-router.put('/:id', async (req, res) => {
+router.put('/:id', verifyToken, isAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     const { name, link, createdAt, postDate } = req.body;
@@ -122,7 +124,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // Deletar
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', verifyToken, isAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     const vipContentToDelete = await Vip.findByPk(id);
