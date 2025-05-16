@@ -10,7 +10,9 @@ app.use(cors({
   origin: [
     'https://sevenxleaks.com',
     'https://www.sevenxleaks.com',
-    'http://localhost:5173'
+    'http://localhost:5173',
+    'https://sevenxleaks.vercel.app/',
+    'https://www.sevenxleaks.vercel.app/'
   ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   credentials: true
@@ -48,6 +50,8 @@ const authRoutes = require('./routes/authRoutes');
 const stripeWebhookRouter = require('./routes/stripewebhook');
 const renewVipRouter = require('./routes/Renewvip');
 const cancelsubscriptionRouter = require('./routes/Cancelsubscription')
+const filterOptionsRoutes = require('./routes/FilterOptions');
+
 
 app.use('/auth', userRouter);
 
@@ -68,6 +72,8 @@ app.use('/recommendations', recommendationsRouter);
 app.use('/filteroptions', FilteroptionsRouter);
 app.use('/webhook', stripeWebhookRouter);
 app.use('/auth', renewVipRouter);
+app.use('/filteroptions', filterOptionsRoutes);
+
 
 // Conexão com o banco de dados PostgreSQL
 const pool = new Pool({
