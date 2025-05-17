@@ -45,12 +45,14 @@ const UpdateVipStatus = require('./routes/updatevipstatus');
 const StatsRouter = require('./routes/stats');  
 const RequestsRouter = require('./routes/requests');  
 const recommendationsRouter = require('./routes/recommendations');
-const FilteroptionsRouter = require('./routes/filter_options');
 const authRoutes = require('./routes/authRoutes');
 const stripeWebhookRouter = require('./routes/stripewebhook');
 const renewVipRouter = require('./routes/Renewvip');
 const cancelsubscriptionRouter = require('./routes/Cancelsubscription')
 const filterOptionsRoutes = require('./routes/FilterOptions');
+const rateLimit = require('express-rate-limit');
+const checkApiKey = require('./Middleware/CheckapiKey');
+
 
 
 app.use('/auth', userRouter);
@@ -60,8 +62,8 @@ app.use('/cancel-subscription', cancelsubscriptionRouter);
 app.use('/reactions', reactionsRouter);
 
 app.use('/auth', authRoutes);
-app.use('/freecontent', FreeRouter);
-app.use('/vipcontent', VipRouter);
+app.use('/freecontent', checkApiKey,  FreeRouter);
+app.use('/vipcontent', checkApiKey, VipRouter);
 app.use('/pay', payRouter);
 app.use('/forgot-password', Forgotpass);
 app.use('/reset-password', ResetPasswordRouter);
@@ -69,10 +71,26 @@ app.use('/update-vip-status', UpdateVipStatus);
 app.use('/api/stats', StatsRouter);  
 app.use('/admin/requests', RequestsRouter);
 app.use('/recommendations', recommendationsRouter);
-app.use('/filteroptions', FilteroptionsRouter);
 app.use('/webhook', stripeWebhookRouter);
 app.use('/auth', renewVipRouter);
 app.use('/filteroptions', filterOptionsRoutes);
+
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, 
+  max: 100, 
+  message: 'Ip bloqueado.',
+});
+
+app.use(limiter); 
+
+app.use((req, res, next) => {
+  const ua = req.headers['user-agent'] || '';
+  if (/curl|wget|bot|spider/i.test(ua)) {
+    return res.status(403).send('Forbidden');
+  }
+  next();
+});
+
 
 
 // Conexão com o banco de dados PostgreSQL
