@@ -3,7 +3,7 @@ const router = express.Router();
 const { Vip } = require('../models');
 const isAdmin = require('../Middleware/isAdmin');
 const verifyToken = require('../Middleware/verifyToken');
-const { Op } = require('sequelize');
+const { Op, Sequelize } = require('sequelize');
 
 function generateSlug(postDate, name) {
   const date = new Date(postDate);
