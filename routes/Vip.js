@@ -3,8 +3,8 @@ const router = express.Router();
 const { Vip } = require('../models');
 const isAdmin = require('../Middleware/isAdmin');
 const verifyToken = require('../Middleware/verifyToken');
+const { Op } = require('sequelize');
 
-// Função para gerar o slug automaticamente
 function generateSlug(postDate, name) {
   const date = new Date(postDate);
   date.setDate(date.getDate() - 1); 
@@ -16,8 +16,7 @@ function generateSlug(postDate, name) {
   return `${formattedDate}-${formattedName}`;
 }
 
-// Criar conteúdo VIP
-router.post('/', verifyToken,isAdmin, async (req, res) => {
+router.post('/', verifyToken, isAdmin, async (req, res) => {
   try {
     let vipContents = req.body;
 
@@ -39,7 +38,69 @@ router.post('/', verifyToken,isAdmin, async (req, res) => {
   }
 });
 
-// Buscar por slug
+router.get('/search', async (req, res) => {
+  try {
+    const { 
+      search, 
+      category, 
+      month,
+      sortBy = 'postDate',
+      sortOrder = 'DESC',
+      page = 1,
+      limit = 900
+    } = req.query;
+
+    const offset = (page - 1) * limit;
+    let whereClause = {};
+
+    // Add search condition if search query exists
+    if (search) {
+      whereClause.name = {
+        [Op.iLike]: `%${search}%`
+      };
+    }
+
+    // Add category filter if category exists
+    if (category) {
+      whereClause.category = category;
+    }
+
+    // Add month filter if month exists
+    if (month) {
+      whereClause.postDate = {
+        [Op.and]: [
+          Sequelize.where(
+            Sequelize.fn('date_part', 'month', Sequelize.col('postDate')),
+            month
+          )
+        ]
+      };
+    }
+
+    const vipContents = await Vip.findAll({
+      where: whereClause,
+      order: [[sortBy, sortOrder]],
+      limit,
+      offset
+    });
+
+    const total = await Vip.count({ where: whereClause });
+
+    res.status(200).json({
+      page: parseInt(page),
+      perPage: parseInt(limit),
+      total,
+      totalPages: Math.ceil(total / limit),
+      data: vipContents
+    });
+
+  } catch (error) {
+    res.status(500).json({ 
+      error: 'Erro ao buscar os conteúdos: ' + error.message 
+    });
+  }
+});
+
 router.get('/:slug', async (req, res) => {
   try {
     const { slug } = req.params;
@@ -55,7 +116,6 @@ router.get('/:slug', async (req, res) => {
   }
 });
 
-// Listar todos com paginação
 router.get('/', async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
@@ -78,7 +138,6 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Buscar por ID
 router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
@@ -92,7 +151,6 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// Atualizar
 router.put('/:id', verifyToken, isAdmin, async (req, res) => {
   try {
     const { id } = req.params;
@@ -123,7 +181,6 @@ router.put('/:id', verifyToken, isAdmin, async (req, res) => {
   }
 });
 
-// Deletar
 router.delete('/:id', verifyToken, isAdmin, async (req, res) => {
   try {
     const { id } = req.params;

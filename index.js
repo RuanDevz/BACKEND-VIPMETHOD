@@ -93,7 +93,6 @@ app.use((req, res, next) => {
 
 
 
-// Conexão com o banco de dados PostgreSQL
 const pool = new Pool({
   connectionString: process.env.POSTGRES_URL, 
 });

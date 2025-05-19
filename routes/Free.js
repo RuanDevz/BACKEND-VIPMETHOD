@@ -3,6 +3,7 @@ const router = express.Router();
 const { Free } = require('../models');
 const verifyToken = require('../Middleware/verifyToken');
 const isAdmin = require('../Middleware/isAdmin');
+const { Op } = require('sequelize');
 
 function generateSlug(postDate, name) {
   const date = new Date(postDate);
@@ -37,7 +38,69 @@ router.post('/', verifyToken, isAdmin, async (req, res) => {
   }
 });
 
-// READ (GET) - busca lista paginada de conteúdos gratuitos
+router.get('/search', async (req, res) => {
+  try {
+    const { 
+      search, 
+      category, 
+      month,
+      sortBy = 'postDate',
+      sortOrder = 'DESC',
+      page = 1,
+      limit = 900
+    } = req.query;
+
+    const offset = (page - 1) * limit;
+    let whereClause = {};
+
+    // Add search condition if search query exists
+    if (search) {
+      whereClause.name = {
+        [Op.iLike]: `%${search}%`
+      };
+    }
+
+    // Add category filter if category exists
+    if (category) {
+      whereClause.category = category;
+    }
+
+    // Add month filter if month exists
+    if (month) {
+      whereClause.postDate = {
+        [Op.and]: [
+          Sequelize.where(
+            Sequelize.fn('date_part', 'month', Sequelize.col('postDate')),
+            month
+          )
+        ]
+      };
+    }
+
+    const freeContents = await Free.findAll({
+      where: whereClause,
+      order: [[sortBy, sortOrder]],
+      limit,
+      offset
+    });
+
+    const total = await Free.count({ where: whereClause });
+
+    res.status(200).json({
+      page: parseInt(page),
+      perPage: parseInt(limit),
+      total,
+      totalPages: Math.ceil(total / limit),
+      data: freeContents
+    });
+
+  } catch (error) {
+    res.status(500).json({ 
+      error: 'Erro ao buscar os conteúdos: ' + error.message 
+    });
+  }
+});
+
 router.get('/', async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
@@ -60,7 +123,6 @@ router.get('/', async (req, res) => {
   }
 });
 
-// READ (GET) - busca conteúdo gratuito por slug
 router.get('/:slug', async (req, res) => {
   try {
     const { slug } = req.params;
@@ -76,7 +138,6 @@ router.get('/:slug', async (req, res) => {
   }
 });
 
-// READ (GET) - busca conteúdo gratuito por ID
 router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
@@ -92,7 +153,6 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// UPDATE (PUT) - atualiza conteúdo gratuito por ID
 router.put('/:id', verifyToken, isAdmin, async (req, res) => {
   try {
     const { id } = req.params;
@@ -103,12 +163,10 @@ router.put('/:id', verifyToken, isAdmin, async (req, res) => {
       return res.status(404).json({ error: 'Conteúdo gratuito não encontrado' });
     }
 
-    // Atualiza os campos
     freeContentToUpdate.name = name !== undefined ? name : freeContentToUpdate.name;
     freeContentToUpdate.link = link !== undefined ? link : freeContentToUpdate.link;
     freeContentToUpdate.postDate = postDate !== undefined ? postDate : freeContentToUpdate.postDate;
 
-    // Atualiza slug se name ou postDate mudarem
     if (name || postDate) {
       freeContentToUpdate.slug = generateSlug(freeContentToUpdate.postDate, freeContentToUpdate.name);
     }
@@ -121,7 +179,6 @@ router.put('/:id', verifyToken, isAdmin, async (req, res) => {
   }
 });
 
-// DELETE - deleta conteúdo gratuito por ID
 router.delete('/:id', verifyToken, isAdmin, async (req, res) => {
   try {
     const { id } = req.params;
