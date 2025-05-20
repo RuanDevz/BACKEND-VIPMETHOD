@@ -82,7 +82,7 @@ router.get('/search', async (req, res) => {
     res.status(500).json({ error: 'Erro ao buscar conteúdos: ' + error.message });
   }
 });
-
+//
 router.get('/', async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
