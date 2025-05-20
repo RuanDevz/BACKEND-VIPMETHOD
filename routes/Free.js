@@ -40,49 +40,67 @@ router.post('/', verifyToken, isAdmin, async (req, res) => {
 
 router.get('/search', async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 20;
+    const { 
+      search, 
+      category, 
+      month,
+      sortBy = 'postDate',
+      sortOrder = 'DESC',
+      page = 1,
+      limit = 900
+    } = req.query;
+
     const offset = (page - 1) * limit;
+    let whereClause = {};
 
-    const { search, category, month, sortBy = 'id', sortOrder = 'ASC' } = req.query;
-
-    const where = {};
+    // Add search condition if search query exists
     if (search) {
-      where.name = { [Op.iLike]: `%${search}%` };
+      whereClause.name = {
+        [Op.iLike]: `%${search}%`
+      };
     }
+
+    // Add category filter if category exists
     if (category) {
-      where.category = category;
+      whereClause.category = category;
     }
+
+    // Add month filter if month exists
     if (month) {
-      where.postDate = {
+      whereClause.postDate = {
         [Op.and]: [
           Sequelize.where(
-            Sequelize.fn('EXTRACT', Sequelize.literal('MONTH FROM "postDate"')),
+            Sequelize.fn('date_part', 'month', Sequelize.col('postDate')),
             month
           )
         ]
       };
     }
 
-    const { count, rows } = await Free.findAndCountAll({
-      where,
+    const freeContents = await Free.findAll({
+      where: whereClause,
       order: [[sortBy, sortOrder]],
       limit,
       offset
     });
 
-    return res.status(200).json({
-      page,
-      perPage: limit,
-      total: count,
-      totalPages: Math.ceil(count / limit),
-      data: rows
+    const total = await Free.count({ where: whereClause });
+
+    res.status(200).json({
+      page: parseInt(page),
+      perPage: parseInt(limit),
+      total,
+      totalPages: Math.ceil(total / limit),
+      data: freeContents
     });
+
   } catch (error) {
-    res.status(500).json({ error: 'Erro ao buscar conteúdos: ' + error.message });
+    res.status(500).json({ 
+      error: 'Erro ao buscar os conteúdos: ' + error.message 
+    });
   }
 });
-//
+
 router.get('/', async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
