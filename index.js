@@ -57,7 +57,7 @@ const checkApiKey = require('./Middleware/CheckapiKey');
 
 app.use('/auth', userRouter);
 
-app.use('/', checkApiKey)
+app.use('/')
 
 app.use('/cancel-subscription', cancelsubscriptionRouter);
 
