@@ -1,6 +1,5 @@
 const express = require('express');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
-const sendConfirmationEmail = require('../Services/Emailsend');
 const { User } = require('../models');
 
 const router = express.Router();
@@ -42,7 +41,6 @@ router.post('/vip-payment', async (req, res) => {
           });
 
         res.json({ url: session.url });
-        console.log(planType)
     } catch (error) {
         console.error('Erro ao criar sessão de checkout:', error.message, error.stack);
         res.status(500).json({ error: 'Erro ao criar sessão de checkout' });
