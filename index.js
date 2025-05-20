@@ -93,6 +93,30 @@ app.use((req, res, next) => {
   next();
 });
 
+app.use((req, res, next) => {
+  const url = decodeURIComponent(req.originalUrl);
+
+  const bloqueios = [
+    /\.bak$/i,
+    /\.old$/i,
+    /nice ports/i,
+    /trinity/i,
+    /\.git/i,
+    /\.env/i,
+    /wp-admin/i,
+    /phpmyadmin/i
+  ];
+
+  for (const pattern of bloqueios) {
+    if (pattern.test(url)) {
+      console.warn(`try suspect: ${url}`);
+      return res.status(403).send('Access denied.');
+    }
+  }
+
+  next();
+});
+
 
 
 const pool = new Pool({
