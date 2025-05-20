@@ -40,64 +40,46 @@ router.post('/', verifyToken, isAdmin, async (req, res) => {
 
 router.get('/search', async (req, res) => {
   try {
-    const { 
-      search, 
-      category, 
-      month,
-      sortBy = 'postDate',
-      sortOrder = 'DESC',
-      page = 1,
-      limit = 900
-    } = req.query;
-
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
     const offset = (page - 1) * limit;
-    let whereClause = {};
 
-    // Add search condition if search query exists
+    const { search, category, month, sortBy = 'id', sortOrder = 'ASC' } = req.query;
+
+    const where = {};
     if (search) {
-      whereClause.name = {
-        [Op.iLike]: `%${search}%`
-      };
+      where.name = { [Op.iLike]: `%${search}%` };
     }
-
-    // Add category filter if category exists
     if (category) {
-      whereClause.category = category;
+      where.category = category;
     }
-
-    // Add month filter if month exists
     if (month) {
-      whereClause.postDate = {
+      where.postDate = {
         [Op.and]: [
           Sequelize.where(
-            Sequelize.fn('date_part', 'month', Sequelize.col('postDate')),
+            Sequelize.fn('EXTRACT', Sequelize.literal('MONTH FROM "postDate"')),
             month
           )
         ]
       };
     }
 
-    const freeContents = await Free.findAll({
-      where: whereClause,
+    const { count, rows } = await Free.findAndCountAll({
+      where,
       order: [[sortBy, sortOrder]],
       limit,
       offset
     });
 
-    const total = await Free.count({ where: whereClause });
-
-    res.status(200).json({
-      page: parseInt(page),
-      perPage: parseInt(limit),
-      total,
-      totalPages: Math.ceil(total / limit),
-      data: freeContents
+    return res.status(200).json({
+      page,
+      perPage: limit,
+      total: count,
+      totalPages: Math.ceil(count / limit),
+      data: rows
     });
-
   } catch (error) {
-    res.status(500).json({ 
-      error: 'Erro ao buscar os conteúdos: ' + error.message 
-    });
+    res.status(500).json({ error: 'Erro ao buscar conteúdos: ' + error.message });
   }
 });
 
