@@ -1,25 +1,42 @@
-const { User } = require('../models');
+const jwt = require("jsonwebtoken");
+const { User } = require("../models");
 
 const isAdmin = async (req, res, next) => {
-    const userId = req.user.id;
+  const adminKey = req.headers["x-admin-key"];
+  const allowedAdminKey = process.env.ADMIN_API_KEY;
 
-    try {
-        const user = await User.findByPk(userId);
+  // ✅ Caso 1: acesso via x-admin-key (Insomnia)
+  if (adminKey && adminKey === allowedAdminKey) {
+    return next(); // libera sem precisar validar o usuário no banco
+  }
 
-        if (!user) {
-            return res.status(404).json({ error: "Usuário não encontrado!" });
-        }
+  // ✅ Caso 2: acesso via JWT (painel de admin)
+  const authHeader = req.headers.authorization;
+  const token = authHeader && authHeader.split(" ")[1];
 
-        if (!user.isAdmin) {
-            return res.status(403).json({ error: "Acesso negado! Apenas administradores podem realizar esta ação." });
-        }
+  if (!token) {
+    return res.status(401).json({ error: "Invalid token access" });
+  }
 
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded;
 
-        next();
-    } catch (error) {
-        console.error(error);
-        return res.status(500).json({ error: "Erro interno do servidor" });
+    const user = await User.findByPk(decoded.id);
+
+    if (!user) {
+      return res.status(404).json({ error: "Usuário não encontrado" });
     }
+
+    if (!user.isAdmin) {
+      return res.status(403).json({ error: "Access denied, only administrators." });
+    }
+
+    next();
+  } catch (err) {
+    console.error(err);
+    return res.status(401).json({ error: "Token expired" });
+  }
 };
 
 module.exports = isAdmin;
