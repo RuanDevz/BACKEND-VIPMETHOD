@@ -172,7 +172,7 @@ router.post('/register', async (req, res) => {
             isVip: false,
             isAdmin: false
         });
-
+//
         res.status(201).json({
             id: createnewuser.id,
             name: createnewuser.name,
