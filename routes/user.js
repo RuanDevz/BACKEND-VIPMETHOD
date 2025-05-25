@@ -154,26 +154,36 @@ router.get('/is-vip/:email', async (req, res) => {
 });
 
 router.post('/register', async (req, res) => {
-    const { password, email, ...users } = req.body;
+    const { name, email, password } = req.body;
 
-    const hashpassword = await bcrypt.hash(password, 10);
+    try {
+        const hashpassword = await bcrypt.hash(password, 10);
 
-    const existingemail = await User.findOne({ where: { email } });
+        const existingemail = await User.findOne({ where: { email } });
 
-    if (existingemail) {
-        return res.status(409).json({ error: 'Email já cadastrado!' });
+        if (existingemail) {
+            return res.status(409).json({ error: 'Email já cadastrado!' });
+        }
+
+        const createnewuser = await User.create({
+            name,
+            email,
+            password: hashpassword,
+            isVip: false,
+            isAdmin: false
+        });
+
+        res.status(201).json({
+            id: createnewuser.id,
+            name: createnewuser.name,
+            email: createnewuser.email,
+        });
+
+    } catch (error) {
+        res.status(500).json({ error: 'Erro ao registrar usuário.' });
     }
-
-    const createnewuser = await User.create({
-        ...users,
-        email,
-        password: hashpassword,
-        isVip: false,
-        isAdmin: false
-    });
-
-    res.status(201).json(createnewuser);
 });
+
 
 router.post('/login', async (req, res) => {
     const { email, password } = req.body;
