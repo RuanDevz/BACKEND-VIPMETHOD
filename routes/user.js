@@ -174,7 +174,6 @@ router.post('/register', async (req, res) => {
         });
 //
         res.status(201).json({
-            id: createnewuser.id,
             name: createnewuser.name,
             email: createnewuser.email,
         });
