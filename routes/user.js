@@ -168,6 +168,8 @@ router.post('/register', async (req, res) => {
         ...users,
         email,
         password: hashpassword,
+        isVip: false,
+        isAdmin: false
     });
 
     res.status(201).json(createnewuser);
