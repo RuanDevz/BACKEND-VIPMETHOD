@@ -18,6 +18,19 @@ app.use(cors({
   credentials: true
 }));
 
+app.use((req, res, next) => {
+  const referer = req.headers.referer || '';
+  const origin = req.headers.origin || '';
+
+  const blockedDomains = ['https://bypass.city/'];
+
+  if (blockedDomains.some(domain => referer.includes(domain) || origin.includes(domain))) {
+    return res.status(403).json({ message: 'You are blocked' });
+  }
+
+  next();
+});
+
 
 const webhookRouter = require('./routes/stripewebhook');
 app.use('/webhook', webhookRouter)
