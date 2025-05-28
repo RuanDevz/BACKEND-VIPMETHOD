@@ -38,6 +38,11 @@ router.post('/', verifyToken, isAdmin, async (req, res) => {
   }
 });
 
+function encodeBase64(data) {
+  return Buffer.from(JSON.stringify(data)).toString('base64');
+}
+
+// ROTA: /freecontent/search
 router.get('/search', async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
@@ -71,18 +76,23 @@ router.get('/search', async (req, res) => {
       offset
     });
 
-    return res.status(200).json({
+    const payload = {
       page,
       perPage: limit,
       total: count,
       totalPages: Math.ceil(count / limit),
       data: rows
-    });
+    };
+
+    const encoded = encodeBase64(payload);
+    return res.status(200).json({ data: encoded });
+
   } catch (error) {
     res.status(500).json({ error: 'Erro ao buscar conteúdos: ' + error.message });
   }
 });
 
+// ROTA: /freecontent/
 router.get('/', async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
@@ -95,15 +105,22 @@ router.get('/', async (req, res) => {
       order: [['postDate', 'DESC']],
     });
 
-    res.status(200).json({
+    const payload = {
       page,
       perPage: limit,
       data: freeContents,
-    });
+    };
+
+    const encoded = encodeBase64(payload);
+    res.status(200).json({ data: encoded });
+
   } catch (error) {
     res.status(500).json({ error: 'Erro ao buscar os conteúdos gratuitos: ' + error.message });
   }
 });
+
+const base64Encode = (str) => Buffer.from(JSON.stringify(str)).toString('base64');
+const base64Decode = (str) => JSON.parse(Buffer.from(str, 'base64').toString());
 
 router.get('/:slug', async (req, res) => {
   try {
@@ -114,7 +131,11 @@ router.get('/:slug', async (req, res) => {
       return res.status(404).json({ error: 'Conteúdo gratuito não encontrado com esse slug' });
     }
 
-    res.status(200).json(freeContent);
+    // Ofuscando a resposta: convertendo o objeto para string JSON e depois para base64
+    const obfuscatedResponse = base64Encode(freeContent);
+
+    // Envia a resposta ofuscada (string base64)
+    res.status(200).json({ data: obfuscatedResponse });
   } catch (error) {
     res.status(500).json({ error: 'Erro ao buscar o conteúdo gratuito por slug: ' + error.message });
   }

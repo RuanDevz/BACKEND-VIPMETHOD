@@ -196,6 +196,7 @@ router.post('/login', async (req, res) => {
     const accesstoken = sign({ email: user.email, id: user.id }, process.env.TOKEN_VERIFY_ACCESS);
 
     res.json({ token: accesstoken, name: user.name });
+
 });
 
 router.get('/dashboard', Authmiddleware, async (req, res) => {
@@ -210,13 +211,21 @@ router.get('/dashboard', Authmiddleware, async (req, res) => {
         //         await user.update({ isVip: false });
         //     }
         // }
-
-        res.json(user);
+        return res.json({
+            name: user.name,
+            email: user.email,
+            isVip: user.isVip,
+            isAdmin: user.isAdmin,
+            favorites: user.favorites,
+            vipExpirationDate: user.vipExpirationDate,
+            createdAt: user.createdAt
+        });
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: "Erro interno do servidor" });
     }
 });
+
 
 //
 router.get('/vip-users', Authmiddleware, isAdmin, async (req, res) => {

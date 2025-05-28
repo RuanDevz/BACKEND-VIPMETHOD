@@ -38,6 +38,11 @@ router.post('/', verifyToken, isAdmin, async (req, res) => {
   }
 });
 
+const encodeBase64 = (data) => {
+  return Buffer.from(JSON.stringify(data)).toString("base64");
+};
+
+// GET /vip/search
 router.get('/search', async (req, res) => {
   try {
     const { 
@@ -51,21 +56,18 @@ router.get('/search', async (req, res) => {
     } = req.query;
 
     const offset = (page - 1) * limit;
-    let whereClause = {};
+    const whereClause = {};
 
-    // Add search condition if search query exists
     if (search) {
       whereClause.name = {
         [Op.iLike]: `%${search}%`
       };
     }
 
-    // Add category filter if category exists
     if (category) {
       whereClause.category = category;
     }
 
-    // Add month filter if month exists
     if (month) {
       whereClause.postDate = {
         [Op.and]: [
@@ -86,21 +88,21 @@ router.get('/search', async (req, res) => {
 
     const total = await Vip.count({ where: whereClause });
 
-    res.status(200).json({
+    const response = {
       page: parseInt(page),
       perPage: parseInt(limit),
       total,
       totalPages: Math.ceil(total / limit),
       data: vipContents
-    });
+    };
 
+    res.status(200).json({ data: encodeBase64(response) });
   } catch (error) {
-    res.status(500).json({ 
-      error: 'Erro ao buscar os conteúdos: ' + error.message 
-    });
+    res.status(500).json({ error: 'Erro ao buscar os conteúdos: ' + error.message });
   }
 });
 
+// GET /vip/:slug
 router.get('/:slug', async (req, res) => {
   try {
     const { slug } = req.params;
@@ -110,12 +112,13 @@ router.get('/:slug', async (req, res) => {
       return res.status(404).json({ error: 'Conteúdo VIP não encontrado com esse slug' });
     }
 
-    res.status(200).json(vipContent);
+    res.status(200).json({ data: encodeBase64(vipContent) });
   } catch (error) {
     res.status(500).json({ error: 'Erro ao buscar o conteúdo VIP por slug: ' + error.message });
   }
 });
 
+// GET /vip
 router.get('/', async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
@@ -128,11 +131,13 @@ router.get('/', async (req, res) => {
       order: [['postDate', 'DESC']],
     });
 
-    res.status(200).json({
+    const response = {
       page,
       perPage: limit,
       data: vipContents,
-    });
+    };
+
+    res.status(200).json({ data: encodeBase64(response) });
   } catch (error) {
     res.status(500).json({ error: 'Erro ao buscar os conteúdos VIP: ' + error.message });
   }

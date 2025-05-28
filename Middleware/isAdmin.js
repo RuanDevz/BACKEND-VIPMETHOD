@@ -19,7 +19,7 @@ const isAdmin = async (req, res, next) => {
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, process.env.TOKEN_VERIFY_ACCESS);
     req.user = decoded;
 
     const user = await User.findByPk(decoded.id);
