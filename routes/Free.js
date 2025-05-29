@@ -3,46 +3,93 @@ const router = express.Router();
 const { Free } = require('../models');
 const verifyToken = require('../Middleware/verifyToken');
 const isAdmin = require('../Middleware/isAdmin');
-const { Op, Sequelize  } = require('sequelize');
+const { Op, Sequelize } = require('sequelize');
 
-function generateSlug(postDate, name) {
+function generateSlug(postDate, name, existingSlugs = new Set()) {
   const date = new Date(postDate);
-  date.setDate(date.getDate() - 1); 
-  const formattedDate = date.toISOString().split('T')[0]; 
-  const formattedName = name
+  const formattedDate = date.toISOString().split('T')[0];
+
+  const baseName = name
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-') 
-    .replace(/(^-|-$)/g, '');   
-  return `${formattedDate}-${formattedName}`;
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '');
+
+  let slug = `${formattedDate}-${baseName}`;
+  let counter = 1;
+
+  while (existingSlugs.has(slug)) {
+    slug = `${formattedDate}-${counter}-${baseName}`;
+    counter++;
+  }
+
+  return slug;
 }
 
 router.post('/', verifyToken, isAdmin, async (req, res) => {
   try {
     let freeContents = req.body;
 
-    if (Array.isArray(freeContents)) {
-      freeContents = freeContents.map(item => ({
-        ...item,
-        slug: generateSlug(item.postDate, item.name)
-      }));
-      const createdContents = await Free.bulkCreate(freeContents);
-      return res.status(201).json(createdContents);
+    async function generateSlugWithCheck(postDate, name) {
+      const date = new Date(postDate);
+      date.setDate(date.getDate() + 1);
+      const formattedDate = date.toISOString().split('T')[0];
+
+      const baseName = name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '');
+
+      const slugsInDb = await Free.findAll({
+        where: {
+          slug: {
+            [Op.iLike]: `${formattedDate}-%${baseName}%`
+          }
+        },
+        attributes: ['slug']
+      });
+
+      const existingSlugs = new Set(slugsInDb.map(s => s.slug));
+
+      let slug = `${formattedDate}-${baseName}`;
+      let counter = 1;
+      while (existingSlugs.has(slug)) {
+        slug = `${formattedDate}-${baseName}-${counter}`;
+        counter++;
+      }
+      return slug;
     }
 
-    freeContents.slug = generateSlug(freeContents.postDate, freeContents.name);
-    const createdContent = await Free.create(freeContents);
-    res.status(201).json(createdContent);
-
+    if (Array.isArray(freeContents)) {
+      for (let i = 0; i < freeContents.length; i++) {
+        freeContents[i].slug = await generateSlugWithCheck(freeContents[i].postDate, freeContents[i].name);
+      }
+      const createdContents = await Free.bulkCreate(freeContents);
+      return res.status(201).json(createdContents);
+    } else {
+      freeContents.slug = await generateSlugWithCheck(freeContents.postDate, freeContents.name);
+      const createdContent = await Free.create(freeContents);
+      return res.status(201).json(createdContent);
+    }
   } catch (error) {
-    res.status(500).json({ error: 'Erro ao criar os conteúdos gratuitos: ' + error.message });
+    return res.status(500).json({ error: 'Erro ao criar os conteúdos gratuitos: ' + error.message });
   }
 });
 
-function encodeBase64(data) {
-  return Buffer.from(JSON.stringify(data)).toString('base64');
+function insertRandomChar(base64Str) {
+  const letters = 'abcdefghijklmnopqrstuvwxyz';
+  const randomChar = letters.charAt(Math.floor(Math.random() * letters.length));
+  // Insere no 3º caractere (index 2)
+  return base64Str.slice(0, 2) + randomChar + base64Str.slice(2);
 }
 
-// ROTA: /freecontent/search
+function encodePayloadToBase64(payload) {
+  const jsonStr = JSON.stringify(payload);
+  const base64Str = Buffer.from(jsonStr).toString('base64');
+  return insertRandomChar(base64Str);
+}
+
+
+
 router.get('/search', async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
@@ -84,15 +131,16 @@ router.get('/search', async (req, res) => {
       data: rows
     };
 
-    const encoded = encodeBase64(payload);
-    return res.status(200).json({ data: encoded });
+    // Envia o payload codificado
+    const encodedPayload = encodePayloadToBase64(payload);
+    return res.status(200).json({ data: encodedPayload });
 
   } catch (error) {
     res.status(500).json({ error: 'Erro ao buscar conteúdos: ' + error.message });
   }
 });
 
-// ROTA: /freecontent/
+// rota GET /
 router.get('/', async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
@@ -111,17 +159,15 @@ router.get('/', async (req, res) => {
       data: freeContents,
     };
 
-    const encoded = encodeBase64(payload);
-    res.status(200).json({ data: encoded });
+    const encodedPayload = encodePayloadToBase64(payload);
+    res.status(200).json({ data: encodedPayload });
 
   } catch (error) {
     res.status(500).json({ error: 'Erro ao buscar os conteúdos gratuitos: ' + error.message });
   }
 });
 
-const base64Encode = (str) => Buffer.from(JSON.stringify(str)).toString('base64');
-const base64Decode = (str) => JSON.parse(Buffer.from(str, 'base64').toString());
-
+// rota GET /:slug
 router.get('/:slug', async (req, res) => {
   try {
     const { slug } = req.params;
@@ -131,16 +177,14 @@ router.get('/:slug', async (req, res) => {
       return res.status(404).json({ error: 'Conteúdo gratuito não encontrado com esse slug' });
     }
 
-    // Ofuscando a resposta: convertendo o objeto para string JSON e depois para base64
-    const obfuscatedResponse = base64Encode(freeContent);
-
-    // Envia a resposta ofuscada (string base64)
-    res.status(200).json({ data: obfuscatedResponse });
+    const encodedContent = encodePayloadToBase64(freeContent);
+    res.status(200).json({ data: encodedContent });
   } catch (error) {
     res.status(500).json({ error: 'Erro ao buscar o conteúdo gratuito por slug: ' + error.message });
   }
 });
 
+// rota GET /:id
 router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
@@ -150,11 +194,14 @@ router.get('/:id', async (req, res) => {
       return res.status(404).json({ error: 'Conteúdo gratuito não encontrado' });
     }
 
-    res.status(200).json(freeContent);
+    const encodedContent = encodePayloadToBase64(freeContent);
+    res.status(200).json({ data: encodedContent });
   } catch (error) {
     res.status(500).json({ error: 'Erro ao buscar o conteúdo gratuito: ' + error.message });
   }
 });
+
+
 
 router.put('/:id', verifyToken, isAdmin, async (req, res) => {
   try {

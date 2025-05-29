@@ -42,7 +42,16 @@ const encodeBase64 = (data) => {
   return Buffer.from(JSON.stringify(data)).toString("base64");
 };
 
-// GET /vip/search
+function getRandomLetter() {
+  const letters = 'abcdefghijklmnopqrstuvwxyz';
+  return letters.charAt(Math.floor(Math.random() * letters.length));
+}
+
+function obfuscateBase64(str) {
+  const randomLetter = getRandomLetter();
+  return str.slice(0, 2) + randomLetter + str.slice(2);
+}
+
 router.get('/search', async (req, res) => {
   try {
     const { 
@@ -96,29 +105,16 @@ router.get('/search', async (req, res) => {
       data: vipContents
     };
 
-    res.status(200).json({ data: encodeBase64(response) });
+    const encoded = encodeBase64(response);
+    const obfuscated = obfuscateBase64(encoded);
+
+    res.status(200).json({ data: obfuscated });
   } catch (error) {
     res.status(500).json({ error: 'Erro ao buscar os conteúdos: ' + error.message });
   }
 });
 
-// GET /vip/:slug
-router.get('/:slug', async (req, res) => {
-  try {
-    const { slug } = req.params;
-    const vipContent = await Vip.findOne({ where: { slug } });
 
-    if (!vipContent) {
-      return res.status(404).json({ error: 'Conteúdo VIP não encontrado com esse slug' });
-    }
-
-    res.status(200).json({ data: encodeBase64(vipContent) });
-  } catch (error) {
-    res.status(500).json({ error: 'Erro ao buscar o conteúdo VIP por slug: ' + error.message });
-  }
-});
-
-// GET /vip
 router.get('/', async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
@@ -137,11 +133,45 @@ router.get('/', async (req, res) => {
       data: vipContents,
     };
 
-    res.status(200).json({ data: encodeBase64(response) });
+    const encoded = encodeBase64(response);
+    const obfuscated = obfuscateBase64(encoded);
+
+    res.status(200).json({ data: obfuscated });
   } catch (error) {
     res.status(500).json({ error: 'Erro ao buscar os conteúdos VIP: ' + error.message });
   }
 });
+
+
+// GET /vip/:slug
+// Função para gerar uma letra aleatória minúscula de a-z
+function getRandomLetter() {
+  const letters = 'abcdefghijklmnopqrstuvwxyz';
+  return letters.charAt(Math.floor(Math.random() * letters.length));
+}
+
+router.get('/:slug', async (req, res) => {
+  try {
+    const { slug } = req.params;
+    const vipContent = await Vip.findOne({ where: { slug } });
+
+    if (!vipContent) {
+      return res.status(404).json({ error: 'Conteúdo VIP não encontrado com esse slug' });
+    }
+
+    // Codifica em base64
+    const base64 = encodeBase64(vipContent);
+
+    // Insere uma letra aleatória minúscula na terceira posição
+    const randomLetter = getRandomLetter();
+    const obfuscatedResponse = base64.slice(0, 2) + randomLetter + base64.slice(2);
+
+    res.status(200).json({ data: obfuscatedResponse });
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao buscar o conteúdo VIP por slug: ' + error.message });
+  }
+});
+
 
 router.get('/:id', async (req, res) => {
   try {

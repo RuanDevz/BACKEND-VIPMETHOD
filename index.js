@@ -76,8 +76,8 @@ app.use('/cancel-subscription', cancelsubscriptionRouter);
 app.use('/reactions', reactionsRouter);
 
 app.use('/auth', authRoutes);
-app.use('/freecontent', checkApiKey,  FreeRouter);
-app.use('/vipcontent', checkApiKey, VipRouter);
+app.use('/freecontent',  FreeRouter);
+app.use('/vipcontent', VipRouter);
 app.use('/pay', payRouter);
 app.use('/forgot-password', Forgotpass);
 app.use('/reset-password', ResetPasswordRouter);
