@@ -287,6 +287,52 @@ router.put('/remove-all-expired-vip', Authmiddleware, isAdmin, async (req, res) 
     }
 });
 
+
+router.get('/user/:email', Authmiddleware, isAdmin, async (req, res) => {
+    const { email } = req.params;
+
+    try {
+        const user = await User.findOne({
+            where: { email },
+            attributes: ['id', 'name', 'email', 'isVip', 'isAdmin', 'vipExpirationDate', 'createdAt', 'isDisabled']
+        });
+
+        if (!user) {
+            return res.status(404).json({ error: 'Usuário não encontrado!' });
+        }
+
+        res.status(200).json(user);
+    } catch (error) {
+        console.error("Erro ao buscar usuário por e-mail:", error);
+        res.status(500).json({ error: 'Erro interno ao buscar usuário.' });
+    }
+});
+
+router.delete('/delete-account/:email', Authmiddleware, async (req, res) => {
+    const { email } = req.params;
+    const loggedInUserId = req.user.id;
+
+    try {
+        const user = await User.findOne({ where: { email } });
+
+        if (!user) {
+            return res.status(404).json({ error: 'Usuário não encontrado!' });
+        }
+
+        if (user.id !== loggedInUserId) {
+            return res.status(403).json({ error: 'Você não tem permissão para excluir essa conta.' });
+        }
+
+        await user.destroy();
+
+        res.status(200).json({ message: 'Conta deletada com sucesso!' });
+    } catch (error) {
+        console.error("Erro ao deletar conta:", error);
+        res.status(500).json({ error: 'Erro interno ao deletar conta.' });
+    }
+});
+
+
 router.get('/user-data', Authmiddleware, async (req, res) => {
     const userId = req.user.id;
 
