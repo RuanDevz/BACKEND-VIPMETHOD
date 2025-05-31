@@ -308,6 +308,44 @@ router.get('/user/:email', Authmiddleware, isAdmin, async (req, res) => {
     }
 });
 
+router.put("/update-profile-image", Authmiddleware, async (req, res) => {
+  try {
+    const { profileImage } = req.body;
+    const userId = req.user.id; // vem do token
+
+    if (!profileImage) {
+      return res.status(400).json({ error: "URL da imagem é obrigatória" });
+    }
+
+    const user = await User.findByPk(userId);
+    if (!user) return res.status(404).json({ error: "Usuário não encontrado" });
+
+    user.profileImage = profileImage;
+    await user.save();
+
+    return res.json({ message: "Imagem de perfil atualizada com sucesso", user });
+  } catch (error) {
+    console.error("Erro ao atualizar imagem:", error);
+    res.status(500).json({ error: "Erro interno do servidor" });
+  }
+});
+
+router.get("/profile-image", Authmiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id; // vem do token
+
+    const user = await User.findByPk(userId);
+    if (!user) {
+      return res.status(404).json({ error: "Usuário não encontrado" });
+    }
+
+    return res.json({ profileImage: user.profileImage });
+  } catch (error) {
+    console.error("Erro ao buscar imagem de perfil:", error);
+    res.status(500).json({ error: "Erro interno do servidor" });
+  }
+});
+
 router.delete('/delete-account/:email', Authmiddleware, async (req, res) => {
     const { email } = req.params;
     const loggedInUserId = req.user.id;

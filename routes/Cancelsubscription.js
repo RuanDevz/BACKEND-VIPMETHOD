@@ -25,7 +25,7 @@ router.post('/', Authmiddleware, async (req, res) => {
     return res.status(200).json({ message: 'Assinatura cancelada com sucesso.' });
   } catch (err) {
     console.error('Erro ao cancelar assinatura:', err);
-    return res.status(500).json({ error: 'Erro ao cancelar assinatura.' });
+    return res.status(500).json({ error: 'Erro ao cancelar assinatura. teste' });
   }
 });
 

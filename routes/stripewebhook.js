@@ -60,46 +60,48 @@ router.post(
         break;
       }
 
-      case 'invoice.paid': {
-        const invoice = event.data.object;
-        const customerId = invoice.customer;
-        const subscriptionId = invoice.subscription;
+     case 'invoice.paid': {
+  const invoice = event.data.object;
+  const customerId = invoice.customer;
+  const subscriptionId = invoice.subscription;
 
-        try {
-          // Recupera a assinatura para pegar os priceId(s)
-          const subscription = await stripe.subscriptions.retrieve(subscriptionId);
-          const priceId = subscription.items.data[0].price.id;
+  try {
+    const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+    const priceId = subscription.items.data[0].price.id;
 
-          // Encontra o usuário pelo subscriptionId
-          const user = await User.findOne({ where: { stripeSubscriptionId: subscriptionId } });
-          if (!user) {
-            console.error('Usuário com assinatura não encontrado');
-            break;
-          }
+    const user = await User.findOne({ where: { stripeSubscriptionId: subscriptionId } });
 
-          const now = new Date();
-          let newExpiration = new Date(now);
+    if (!user) {
+      console.error('Usuário com assinatura não encontrado para invoice.paid');
+      return res.status(404).send('Usuário não encontrado');
+    }
 
-          if (priceId === process.env.STRIPE_PRICEID_MONTHLY) {
-            newExpiration.setDate(now.getDate() + 30);
-          } else if (priceId === process.env.STRIPE_PRICEID_ANNUAL) {
-            newExpiration.setDate(now.getDate() + 365);
-          } else {
-            console.error('Plano não reconhecido para invoice.paid');
-            break;
-          }
+    const now = new Date();
+    let newExpiration = new Date(now);
 
-          await user.update({
-            isVip: true,
-            vipExpirationDate: newExpiration,
-          });
+    if (priceId === process.env.STRIPE_PRICEID_MONTHLY) {
+      newExpiration.setDate(now.getDate() + 30);
+    } else if (priceId === process.env.STRIPE_PRICEID_ANNUAL) {
+      newExpiration.setDate(now.getDate() + 365);
+    } else {
+      console.error('Plano não reconhecido para invoice.paid');
+      return res.status(400).send('Plano desconhecido');
+    }
 
-          console.log(`✅ VIP atualizado após pagamento de invoice para: ${user.email}`);
-        } catch (err) {
-          console.error('Erro ao processar invoice.paid:', err);
-        }
-        break;
-      }
+    await user.update({
+      isVip: true,
+      vipExpirationDate: newExpiration,
+    });
+
+    console.log(`✅ VIP atualizado após pagamento de invoice para: ${user.email}`);
+    return res.status(200).send({ received: true });
+
+  } catch (err) {
+    console.error('Erro ao processar invoice.paid:', err);
+    return res.status(500).send('Erro ao processar invoice.paid');
+  }
+}
+
 
       case 'customer.subscription.deleted': {
         const subscription = event.data.object;
