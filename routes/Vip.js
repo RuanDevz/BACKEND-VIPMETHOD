@@ -43,7 +43,7 @@ router.post('/', verifyToken, isAdmin, async (req, res) => {
     res.status(500).json({ error: 'Erro ao criar os conteúdos VIP: ' + error.message });
   }
 });
-
+//
 const encodeBase64 = (data) => {
   return Buffer.from(JSON.stringify(data)).toString("base64");
 };
