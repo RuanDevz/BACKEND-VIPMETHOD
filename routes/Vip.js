@@ -4,6 +4,7 @@ const { Vip } = require('../models');
 const isAdmin = require('../Middleware/isAdmin');
 const verifyToken = require('../Middleware/verifyToken');
 const { Op, Sequelize } = require('sequelize');
+const { v4: uuidv4 } = require('uuid');
 
 function generateSlug(postDate, name) {
   const date = new Date(postDate);
@@ -22,14 +23,19 @@ router.post('/', verifyToken, isAdmin, async (req, res) => {
 
     if (Array.isArray(vipContents)) {
       vipContents = vipContents.map(item => ({
-        ...item,
+      ...item,
         slug: generateSlug(item.postDate, item.name)
+      }));
+      vipContents = vipContents.map(item => ({
+        ...item,
+        slug: uuidv4()
       }));
       const createdContents = await Vip.bulkCreate(vipContents);
       return res.status(201).json(createdContents);
     }
 
-    vipContents.slug = generateSlug(vipContents.postDate, vipContents.name);
+   vipContents.slug = generateSlug(vipContents.postDate, vipContents.name);
+    vipContents.slug = uuidv4();
     const createdContent = await Vip.create(vipContents);
     res.status(201).json(createdContent);
 
@@ -42,7 +48,7 @@ const encodeBase64 = (data) => {
   return Buffer.from(JSON.stringify(data)).toString("base64");
 };
 
-function getRandomLetter() {
+ function getRandomLetter() {
   const letters = 'abcdefghijklmnopqrstuvwxyz';
   return letters.charAt(Math.floor(Math.random() * letters.length));
 }

@@ -4,76 +4,52 @@ const { Free } = require('../models');
 const verifyToken = require('../Middleware/verifyToken');
 const isAdmin = require('../Middleware/isAdmin');
 const { Op, Sequelize } = require('sequelize');
+const { v4: uuidv4 } = require('uuid');
 
-function generateSlug(postDate, name, existingSlugs = new Set()) {
-  const date = new Date(postDate);
-  const formattedDate = date.toISOString().split('T')[0];
+// function generateSlug(postDate, name, existingSlugs = new Set()) {
+//   const date = new Date(postDate);
+//   const formattedDate = date.toISOString().split('T')[0];
 
-  const baseName = name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)/g, '');
+//   const baseName = name
+//     .toLowerCase()
+//     .replace(/[^a-z0-9]+/g, '-')
+//     .replace(/(^-|-$)/g, '');
 
-  let slug = `${formattedDate}-${baseName}`;
-  let counter = 1;
+//   let slug = `${formattedDate}-${baseName}`;
+//   let counter = 1;
 
-  while (existingSlugs.has(slug)) {
-    slug = `${formattedDate}-${counter}-${baseName}`;
-    counter++;
-  }
+//   while (existingSlugs.has(slug)) {
+//     slug = `${formattedDate}-${counter}-${baseName}`;
+//     counter++;
+//   }
 
-  return slug;
-}
+//   return slug;
+// }
 
-router.post('/', verifyToken, isAdmin, async (req, res) => {
-  try {
-    let freeContents = req.body;
 
-    async function generateSlugWithCheck(postDate, name) {
-      const date = new Date(postDate);
-      date.setDate(date.getDate() + 1);
-      const formattedDate = date.toISOString().split('T')[0];
+ router.post('/', verifyToken, isAdmin, async (req, res) => {
+   try {
+     let freeContents = req.body;
 
-      const baseName = name
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/(^-|-$)/g, '');
+    async function generateSlugWithCheck(postDate, name) { /* ... */ }
 
-      const slugsInDb = await Free.findAll({
-        where: {
-          slug: {
-            [Op.iLike]: `${formattedDate}-%${baseName}%`
-          }
-        },
-        attributes: ['slug']
-      });
-
-      const existingSlugs = new Set(slugsInDb.map(s => s.slug));
-
-      let slug = `${formattedDate}-${baseName}`;
-      let counter = 1;
-      while (existingSlugs.has(slug)) {
-        slug = `${formattedDate}-${baseName}-${counter}`;
-        counter++;
-      }
-      return slug;
-    }
-
-    if (Array.isArray(freeContents)) {
-      for (let i = 0; i < freeContents.length; i++) {
-        freeContents[i].slug = await generateSlugWithCheck(freeContents[i].postDate, freeContents[i].name);
-      }
-      const createdContents = await Free.bulkCreate(freeContents);
-      return res.status(201).json(createdContents);
-    } else {
+     if (Array.isArray(freeContents)) {
+       for (let i = 0; i < freeContents.length; i++) {
+freeContents[i].slug = await generateSlugWithCheck(freeContents[i].postDate, freeContents[i].name);
+        freeContents[i].slug = uuidv4();
+       }
+       const createdContents = await Free.bulkCreate(freeContents);
+       return res.status(201).json(createdContents);
+     } else {
       freeContents.slug = await generateSlugWithCheck(freeContents.postDate, freeContents.name);
-      const createdContent = await Free.create(freeContents);
-      return res.status(201).json(createdContent);
-    }
-  } catch (error) {
-    return res.status(500).json({ error: 'Erro ao criar os conteúdos gratuitos: ' + error.message });
-  }
-});
+      freeContents.slug = uuidv4();
+       const createdContent = await Free.create(freeContents);
+       return res.status(201).json(createdContent);
+     }
+   } catch (error) {
+     return res.status(500).json({ error: 'Erro ao criar os conteúdos gratuitos: ' + error.message });
+   }
+ });
 
 function insertRandomChar(base64Str) {
   const letters = 'abcdefghijklmnopqrstuvwxyz';
