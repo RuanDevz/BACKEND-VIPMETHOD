@@ -47,7 +47,7 @@ app.use((req, res, next) => {
 const reactionsRouter = require('./routes/Reactions');
 
 
-
+const linkvertiseConfigRouter = require('./routes/linkvertiseConfig');
 const userRouter = require('./routes/user');
 const FreeRouter = require('./routes/Free');
 const payRouter = require('./routes/payment');
@@ -88,6 +88,7 @@ app.use('/recommendations', recommendationsRouter);
 app.use('/webhook', stripeWebhookRouter);
 app.use('/auth', renewVipRouter);
 app.use('/filteroptions', filterOptionsRoutes);
+app.use('/linkvertise-config', linkvertiseConfigRouter);
 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, 
@@ -96,6 +97,7 @@ const limiter = rateLimit({
 });
 
 app.use(limiter); 
+
 
 app.use((req, res, next) => {
   const ua = req.headers['user-agent'] || '';
