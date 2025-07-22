@@ -4,17 +4,39 @@ const { Vip } = require('../models');
 const isAdmin = require('../Middleware/isAdmin');
 const verifyToken = require('../Middleware/verifyToken');
 const { Op, Sequelize } = require('sequelize');
-const { v4: uuidv4 } = require('uuid');
 
-function generateSlug(postDate, name) {
+function generateSlug(postDate, name, existingSlugs = new Set()) {
   const date = new Date(postDate);
-  date.setDate(date.getDate() - 1); 
-  const formattedDate = date.toISOString().split('T')[0]; 
+  date.setDate(date.getDate() - 1);
+  const formattedDate = date.toISOString().split('T')[0];
   const formattedName = name
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-') 
-    .replace(/(^-|-$)/g, '');   
-  return `${formattedDate}-${formattedName}`;
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '');
+  
+  let slug = `${formattedDate}-${formattedName}`;
+  let counter = 1;
+
+  while (existingSlugs.has(slug)) {
+    slug = `${formattedDate}-${counter}-${formattedName}`;
+    counter++;
+  }
+
+  return slug;
+}
+
+async function generateSlugWithCheck(postDate, name) {
+  const existingSlugsRaw = await Vip.findAll({
+    where: {
+      slug: {
+        [Op.iLike]: `%${name}%`
+      }
+    },
+    attributes: ['slug']
+  });
+
+  const existingSlugs = new Set(existingSlugsRaw.map(entry => entry.slug));
+  return generateSlug(postDate, name, existingSlugs);
 }
 
 router.post('/', verifyToken, isAdmin, async (req, res) => {
@@ -22,20 +44,14 @@ router.post('/', verifyToken, isAdmin, async (req, res) => {
     let vipContents = req.body;
 
     if (Array.isArray(vipContents)) {
-      vipContents = vipContents.map(item => ({
-      ...item,
-        slug: generateSlug(item.postDate, item.name)
-      }));
-      vipContents = vipContents.map(item => ({
-        ...item,
-        slug: uuidv4()
-      }));
+      for (let i = 0; i < vipContents.length; i++) {
+        vipContents[i].slug = await generateSlugWithCheck(vipContents[i].postDate, vipContents[i].name);
+      }
       const createdContents = await Vip.bulkCreate(vipContents);
       return res.status(201).json(createdContents);
     }
 
-   vipContents.slug = generateSlug(vipContents.postDate, vipContents.name);
-    vipContents.slug = uuidv4();
+    vipContents.slug = await generateSlugWithCheck(vipContents.postDate, vipContents.name);
     const createdContent = await Vip.create(vipContents);
     res.status(201).json(createdContent);
 
@@ -43,12 +59,12 @@ router.post('/', verifyToken, isAdmin, async (req, res) => {
     res.status(500).json({ error: 'Erro ao criar os conteúdos VIP: ' + error.message });
   }
 });
-//
+
 const encodeBase64 = (data) => {
   return Buffer.from(JSON.stringify(data)).toString("base64");
 };
 
- function getRandomLetter() {
+function getRandomLetter() {
   const letters = 'abcdefghijklmnopqrstuvwxyz';
   return letters.charAt(Math.floor(Math.random() * letters.length));
 }
@@ -120,7 +136,6 @@ router.get('/search', async (req, res) => {
   }
 });
 
-
 router.get('/', async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
@@ -148,14 +163,6 @@ router.get('/', async (req, res) => {
   }
 });
 
-
-// GET /vip/:slug
-// Função para gerar uma letra aleatória minúscula de a-z
-function getRandomLetter() {
-  const letters = 'abcdefghijklmnopqrstuvwxyz';
-  return letters.charAt(Math.floor(Math.random() * letters.length));
-}
-
 router.get('/:slug', async (req, res) => {
   try {
     const { slug } = req.params;
@@ -165,19 +172,14 @@ router.get('/:slug', async (req, res) => {
       return res.status(404).json({ error: 'Conteúdo VIP não encontrado com esse slug' });
     }
 
-    // Codifica em base64
     const base64 = encodeBase64(vipContent);
-
-    // Insere uma letra aleatória minúscula na terceira posição
-    const randomLetter = getRandomLetter();
-    const obfuscatedResponse = base64.slice(0, 2) + randomLetter + base64.slice(2);
+    const obfuscatedResponse = base64.slice(0, 2) + getRandomLetter() + base64.slice(2);
 
     res.status(200).json({ data: obfuscatedResponse });
   } catch (error) {
     res.status(500).json({ error: 'Erro ao buscar o conteúdo VIP por slug: ' + error.message });
   }
 });
-
 
 router.get('/:id', async (req, res) => {
   try {
@@ -208,7 +210,7 @@ router.put('/:id', verifyToken, isAdmin, async (req, res) => {
     vipContentToUpdate.postDate = postDate || vipContentToUpdate.postDate;
 
     if (name || postDate) {
-      vipContentToUpdate.slug = generateSlug(
+      vipContentToUpdate.slug = await generateSlugWithCheck(
         postDate || vipContentToUpdate.postDate,
         name || vipContentToUpdate.name
       );
