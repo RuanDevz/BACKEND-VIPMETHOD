@@ -63,6 +63,7 @@ const stripeWebhookRouter = require('./routes/stripewebhook');
 const renewVipRouter = require('./routes/Renewvip');
 const cancelsubscriptionRouter = require('./routes/Cancelsubscription')
 const filterOptionsRoutes = require('./routes/FilterOptions');
+const stripeCustomerPortalRouter = require('./routes/stripeCustomerPortal');
 const rateLimit = require('express-rate-limit');
 const checkApiKey = require('./Middleware/CheckapiKey');
 
@@ -89,6 +90,7 @@ app.use('/webhook', stripeWebhookRouter);
 app.use('/auth', renewVipRouter);
 app.use('/filteroptions', filterOptionsRoutes);
 app.use('/linkvertise-config', linkvertiseConfigRouter);
+app.use('/stripe-portal', stripeCustomerPortalRouter);
 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, 
