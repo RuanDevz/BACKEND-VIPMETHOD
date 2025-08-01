@@ -10,7 +10,7 @@ module.exports = (sequelize, DataTypes) => {
     },
     link2: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true,
     },
     linkP:{
       type: DataTypes.STRING,
