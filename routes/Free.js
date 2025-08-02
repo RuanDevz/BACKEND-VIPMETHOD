@@ -184,7 +184,7 @@ router.get('/:id', async (req, res) => {
 router.put('/:id', verifyToken, isAdmin, async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, link, postDate } = req.body;
+    const { name, link, link2, linkP, linkG, linkMV1, linkMV2, linkMV3, linkMV4, postDate } = req.body;
 
     const freeContentToUpdate = await Free.findByPk(id);
     if (!freeContentToUpdate) {
@@ -193,6 +193,13 @@ router.put('/:id', verifyToken, isAdmin, async (req, res) => {
 
     freeContentToUpdate.name = name !== undefined ? name : freeContentToUpdate.name;
     freeContentToUpdate.link = link !== undefined ? link : freeContentToUpdate.link;
+    freeContentToUpdate.link2 = link2 !== undefined ? link2 : freeContentToUpdate.link2;
+    freeContentToUpdate.linkP = linkP !== undefined ? linkP : freeContentToUpdate.linkP;
+    freeContentToUpdate.linkG = linkG !== undefined ? linkG : freeContentToUpdate.linkG;
+    freeContentToUpdate.linkMV1 = linkMV1 !== undefined ? linkMV1 : freeContentToUpdate.linkMV1;
+    freeContentToUpdate.linkMV2 = linkMV2 !== undefined ? linkMV2 : freeContentToUpdate.linkMV2;
+    freeContentToUpdate.linkMV3 = linkMV3 !== undefined ? linkMV3 : freeContentToUpdate.linkMV3;
+    freeContentToUpdate.linkMV4 = linkMV4 !== undefined ? linkMV4 : freeContentToUpdate.linkMV4;
     freeContentToUpdate.postDate = postDate !== undefined ? postDate : freeContentToUpdate.postDate;
 
     if (name || postDate) {

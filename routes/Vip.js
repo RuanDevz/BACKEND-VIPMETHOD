@@ -197,17 +197,24 @@ router.get('/:id', async (req, res) => {
 router.put('/:id', verifyToken, isAdmin, async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, link, createdAt, postDate } = req.body;
+    const { name, link, link2, linkP, linkG, linkMV1, linkMV2, linkMV3, linkMV4, createdAt, postDate } = req.body;
 
     const vipContentToUpdate = await Vip.findByPk(id);
     if (!vipContentToUpdate) {
       return res.status(404).json({ error: 'Conteúdo VIP não encontrado' });
     }
 
-    vipContentToUpdate.name = name;
-    vipContentToUpdate.link = link;
-    vipContentToUpdate.createdAt = createdAt || vipContentToUpdate.createdAt;
-    vipContentToUpdate.postDate = postDate || vipContentToUpdate.postDate;
+    vipContentToUpdate.name = name !== undefined ? name : vipContentToUpdate.name;
+    vipContentToUpdate.link = link !== undefined ? link : vipContentToUpdate.link;
+    vipContentToUpdate.link2 = link2 !== undefined ? link2 : vipContentToUpdate.link2;
+    vipContentToUpdate.linkP = linkP !== undefined ? linkP : vipContentToUpdate.linkP;
+    vipContentToUpdate.linkG = linkG !== undefined ? linkG : vipContentToUpdate.linkG;
+    vipContentToUpdate.linkMV1 = linkMV1 !== undefined ? linkMV1 : vipContentToUpdate.linkMV1;
+    vipContentToUpdate.linkMV2 = linkMV2 !== undefined ? linkMV2 : vipContentToUpdate.linkMV2;
+    vipContentToUpdate.linkMV3 = linkMV3 !== undefined ? linkMV3 : vipContentToUpdate.linkMV3;
+    vipContentToUpdate.linkMV4 = linkMV4 !== undefined ? linkMV4 : vipContentToUpdate.linkMV4;
+    vipContentToUpdate.createdAt = createdAt !== undefined ? createdAt : vipContentToUpdate.createdAt;
+    vipContentToUpdate.postDate = postDate !== undefined ? postDate : vipContentToUpdate.postDate;
 
     if (name || postDate) {
       vipContentToUpdate.slug = await generateSlugWithCheck(
