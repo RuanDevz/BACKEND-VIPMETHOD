@@ -148,7 +148,7 @@ pool.connect((err, client, done) => {
   done();
 });
 
-db.sequelize.sync({ alter: true });
+// db.sequelize.sync({ alter: true });
 
 db.sequelize.authenticate()
   .then(() => {
